@@ -18,17 +18,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       include: {
         photos: {
           include: {
-            photo: {
+            photo: true,
+            likes: {
               select: {
                 id: true,
-                filename: true,
-                originalName: true,
-                previewPath: true,
-                thumbnailPath: true,
-                width: true,
-                height: true,
-                size: true
+                clientName: true,
+                createdAt: true
               }
+            },
+            comments: {
+              select: {
+                id: true,
+                comment: true,
+                clientName: true,
+                createdAt: true,
+                updatedAt: true
+              },
+              orderBy: { createdAt: "desc" }
             }
           }
         },
@@ -60,7 +66,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         createdAt: gallery.createdAt,
         expiresAt: gallery.expiresAt,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        photos: gallery.photos.map((gp: any) => gp.photo),
+        photos: gallery.photos.map((gp: any) => ({
+          ...gp.photo,
+          likes: gp.likes,
+          comments: gp.comments,
+          likeCount: gp.likes.length,
+          commentCount: gp.comments.length
+        })),
         session: {
           title: gallery.session.title,
           date: gallery.session.sessionDate,

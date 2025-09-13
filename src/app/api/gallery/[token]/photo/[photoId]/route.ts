@@ -72,8 +72,12 @@ export async function GET(
       return new NextResponse(new Uint8Array(imageBuffer), {
         headers: {
           "Content-Type": photo.mimeType || "image/jpeg",
-          "Cache-Control": "public, max-age=3600",
-          "Content-Disposition": "inline"
+          "Cache-Control": "private, no-cache, no-store, must-revalidate",
+          "Content-Disposition": 'inline; filename=""',
+          "X-Content-Type-Options": "nosniff",
+          "X-Frame-Options": "DENY",
+          Pragma: "no-cache",
+          Expires: "0"
         }
       });
     } catch (error) {
