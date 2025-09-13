@@ -156,25 +156,43 @@ export default function SessionsManagementPage() {
         <div className="bg-white shadow rounded-lg">
           {sessions.length > 0 ? (
             <div className="overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="w-full table-fixed divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ width: "30%" }}
+                    >
                       Session
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ width: "20%" }}
+                    >
                       Client
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ width: "15%" }}
+                    >
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ width: "10%" }}
+                    >
                       Photos
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell"
+                      style={{ width: "15%" }}
+                    >
                       Location
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th
+                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      style={{ width: "10%" }}
+                    >
                       Actions
                     </th>
                   </tr>
@@ -182,51 +200,61 @@ export default function SessionsManagementPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sessions.map((session) => (
                     <tr key={session.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-4 py-4">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-gray-900 truncate">
                             {session.title}
                           </div>
                           {session.description && (
-                            <div className="text-sm text-gray-500 truncate max-w-xs">
+                            <div className="text-xs text-gray-500 truncate">
                               {session.description}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
+                      <td className="px-4 py-4">
+                        <div className="text-sm text-gray-900 truncate">
                           {session.client.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-xs text-gray-500 truncate">
                           {session.client.email}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(session.sessionDate).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          }
-                        )}
+                      <td className="px-4 py-4 text-sm text-gray-900">
+                        <div className="text-sm">
+                          {new Date(session.sessionDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "2-digit"
+                            }
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(session.sessionDate).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            }
+                          )}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {session._count.photos} photos
+                      <td className="px-2 py-4 text-center">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {session._count.photos}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-4 py-4 text-sm text-gray-500 truncate hidden sm:table-cell">
                         {session.location || "Not specified"}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex justify-end space-x-1">
                           <Link
                             href={`/sessions/${session.id}`}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                            title="View session"
                           >
                             View
                           </Link>
@@ -235,11 +263,10 @@ export default function SessionsManagementPage() {
                               handleDeleteSession(session.id, session.title)
                             }
                             disabled={deleteLoading === session.id}
-                            className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                            className="inline-flex items-center px-2 py-1 text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-colors"
+                            title="Delete session"
                           >
-                            {deleteLoading === session.id
-                              ? "Deleting..."
-                              : "Delete"}
+                            {deleteLoading === session.id ? "..." : "Del"}
                           </button>
                         </div>
                       </td>

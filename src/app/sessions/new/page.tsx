@@ -185,7 +185,7 @@ export default function NewSessionPage() {
                   required
                   value={formData.title}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-white text-gray-900 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Smith Family Portrait Session"
                 />
               </div>
@@ -204,7 +204,7 @@ export default function NewSessionPage() {
                   required
                   value={formData.clientId}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-white text-gray-900 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Select a client...</option>
                   {Array.isArray(clients) &&
@@ -214,18 +214,15 @@ export default function NewSessionPage() {
                       </option>
                     ))}
                 </select>
-                {Array.isArray(clients) && clients.length === 0 && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    No clients found.{" "}
-                    <a
-                      href="/dashboard/clients"
-                      className="text-blue-600 hover:text-blue-500"
-                    >
-                      Create a client first
-                    </a>
-                    .
-                  </p>
-                )}
+                <p className="mt-1 text-sm text-gray-500">
+                  Need to add a new client?{" "}
+                  <a
+                    href="/dashboard/clients"
+                    className="text-blue-600 hover:text-blue-500"
+                  >
+                    Add new clients here
+                  </a>
+                </p>
               </div>
 
               {/* Session Date */}
@@ -243,7 +240,7 @@ export default function NewSessionPage() {
                   required
                   value={formData.sessionDate}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-white text-gray-900 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -261,7 +258,7 @@ export default function NewSessionPage() {
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-white text-gray-900 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Central Park, NYC"
                 />
               </div>
@@ -280,7 +277,7 @@ export default function NewSessionPage() {
                   rows={4}
                   value={formData.description}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 bg-white text-gray-900 border border-gray-400 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Any special requests, props needed, or other notes for the session..."
                 />
               </div>
