@@ -132,7 +132,7 @@ export function GalleryManagement() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-gray-50 rounded-lg p-6">
       {/* Create Gallery Button */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-900">Your Galleries</h2>

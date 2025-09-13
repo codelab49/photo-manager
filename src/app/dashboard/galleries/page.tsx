@@ -8,17 +8,19 @@ export const metadata: Metadata = {
 
 export default function GalleriesPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Gallery Management
-        </h1>
-        <p className="text-gray-600">
-          Create and manage galleries to share with clients
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Gallery Management
+          </h1>
+          <p className="text-gray-600">
+            Create and manage galleries to share with clients
+          </p>
+        </div>
 
-      <GalleryManagement />
+        <GalleryManagement />
+      </div>
     </div>
   );
 }
