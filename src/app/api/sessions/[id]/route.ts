@@ -88,6 +88,121 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get user
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const { title, clientId, sessionDate, location, description } =
+      await request.json();
+
+    // Validate required fields
+    if (!title || !clientId || !sessionDate) {
+      return NextResponse.json(
+        { error: "Title, client, and session date are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if session exists and belongs to user
+    const existingSession = await prisma.photoSession.findFirst({
+      where: {
+        id: params.id,
+        photographerId: user.id
+      }
+    });
+
+    if (!existingSession) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    // Verify client exists and belongs to user
+    const client = await prisma.client.findFirst({
+      where: {
+        id: clientId,
+        photographerId: user.id
+      }
+    });
+
+    if (!client) {
+      return NextResponse.json({ error: "Client not found" }, { status: 400 });
+    }
+
+    // Update the session
+    const updatedSession = await prisma.photoSession.update({
+      where: { id: params.id },
+      data: {
+        title,
+        clientId,
+        sessionDate: new Date(sessionDate),
+        location: location || null,
+        description: description || null
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            recipients: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                relation: true
+              }
+            }
+          }
+        },
+        photos: {
+          select: {
+            id: true,
+            filename: true,
+            originalName: true,
+            path: true,
+            size: true,
+            width: true,
+            height: true,
+            uploadedAt: true
+          },
+          orderBy: {
+            uploadedAt: "asc"
+          }
+        },
+        _count: {
+          select: {
+            photos: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(updatedSession);
+  } catch (error) {
+    console.error("Error updating session:", error);
+    return NextResponse.json(
+      { error: "Failed to update session" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
