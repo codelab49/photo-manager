@@ -48,20 +48,28 @@ export async function GET(
     const type = request.nextUrl.searchParams.get("type") || "preview";
 
     try {
-      // Download original image from GCS
-      const originalBuffer = await downloadFromGCS(photo.path);
+      let imageBuffer: Buffer;
 
-      // Apply watermark to create preview or thumbnail
-      const watermarkedBuffer = await addWatermark(originalBuffer, {
-        text:
-          type === "thumbnail"
-            ? gallery.title
-            : "Preview Only - " + gallery.title,
-        opacity: type === "thumbnail" ? 0.5 : 0.7,
-        fontSize: type === "thumbnail" ? 24 : 36
-      });
+      if (type === "thumbnail" && photo.thumbnailPath) {
+        // Use pre-generated thumbnail (no watermark needed for small thumbs)
+        imageBuffer = await downloadFromGCS(photo.thumbnailPath);
+      } else if (type === "preview" && photo.previewPath) {
+        // Use pre-generated watermarked preview
+        imageBuffer = await downloadFromGCS(photo.previewPath);
+      } else {
+        // Fallback: generate on-the-fly if pre-generated version doesn't exist
+        const originalBuffer = await downloadFromGCS(photo.path);
+        imageBuffer = await addWatermark(originalBuffer, {
+          text:
+            type === "thumbnail"
+              ? gallery.title
+              : "Preview Only - " + gallery.title,
+          opacity: type === "thumbnail" ? 0.5 : 0.7,
+          fontSize: type === "thumbnail" ? 24 : 36
+        });
+      }
 
-      return new NextResponse(new Uint8Array(watermarkedBuffer), {
+      return new NextResponse(new Uint8Array(imageBuffer), {
         headers: {
           "Content-Type": photo.mimeType || "image/jpeg",
           "Cache-Control": "public, max-age=3600",
