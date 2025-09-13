@@ -45,6 +45,14 @@ export async function GET() {
           select: {
             id: true
           }
+        },
+        accessList: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            accessToken: true
+          }
         }
       },
       orderBy: {
@@ -80,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, sessionId, photoIds, expiryDays = 30 } = body;
+    const { title, sessionId, photoIds, expiryDays = 30, accessList = [] } = body;
 
     // Validate input
     if (
@@ -94,6 +102,33 @@ export async function POST(request: NextRequest) {
         { error: "Missing required fields: title, sessionId, and photoIds" },
         { status: 400 }
       );
+    }
+
+    // Validate access list format
+    if (accessList && !Array.isArray(accessList)) {
+      return NextResponse.json(
+        { error: "Access list must be an array" },
+        { status: 400 }
+      );
+    }
+
+    // Validate each access list item
+    for (const person of accessList) {
+      if (!person.name || !person.email || typeof person.name !== 'string' || typeof person.email !== 'string') {
+        return NextResponse.json(
+          { error: "Each access list item must have name and email strings" },
+          { status: 400 }
+        );
+      }
+      
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(person.email)) {
+        return NextResponse.json(
+          { error: `Invalid email format: ${person.email}` },
+          { status: 400 }
+        );
+      }
     }
 
     // Verify the session belongs to this user
@@ -144,6 +179,13 @@ export async function POST(request: NextRequest) {
           create: photoIds.map((photoId: string) => ({
             photoId
           }))
+        },
+        accessList: {
+          create: accessList.map((person: { name: string; email: string }) => ({
+            name: person.name.trim(),
+            email: person.email.trim().toLowerCase(),
+            accessToken: uuidv4()
+          }))
         }
       },
       include: {
@@ -162,6 +204,14 @@ export async function POST(request: NextRequest) {
         photos: {
           select: {
             id: true
+          }
+        },
+        accessList: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            accessToken: true
           }
         }
       }

@@ -7,31 +7,43 @@ export async function POST(
 ) {
   try {
     const { photoId, token } = await params;
-    const { comment, clientName, clientEmail } = await request.json();
+    const { comment, accessToken } = await request.json();
 
-    if (!comment || !clientName) {
+    if (!comment || !accessToken) {
       return NextResponse.json(
-        { error: "Comment and client name are required" },
+        { error: "Comment and access token are required" },
         { status: 400 }
       );
     }
 
-    // Verify gallery exists and is active
-    const gallery = await prisma.gallery.findUnique({
-      where: { shareToken: token },
+    // Verify access token and get gallery access
+    const galleryAccess = await prisma.galleryAccess.findFirst({
+      where: {
+        accessToken: accessToken,
+        gallery: {
+          shareToken: token,
+          isActive: true
+        }
+      },
       include: {
-        photos: {
-          where: { photoId }
+        gallery: {
+          include: {
+            photos: {
+              where: { photoId }
+            }
+          }
         }
       }
     });
 
-    if (!gallery || !gallery.isActive) {
+    if (!galleryAccess) {
       return NextResponse.json(
-        { error: "Gallery not found or inactive" },
-        { status: 404 }
+        { error: "Invalid access token or gallery not found" },
+        { status: 403 }
       );
     }
+
+    const gallery = galleryAccess.gallery;
 
     // Check if gallery has expired
     if (gallery.expiresAt && gallery.expiresAt < new Date()) {
@@ -56,8 +68,15 @@ export async function POST(
       data: {
         galleryPhotoId: galleryPhoto.id,
         comment,
-        clientName,
-        clientEmail: clientEmail || null
+        galleryAccessId: galleryAccess.id
+      },
+      include: {
+        galleryAccess: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -66,7 +85,8 @@ export async function POST(
       comment: {
         id: newComment.id,
         comment: newComment.comment,
-        clientName: newComment.clientName,
+        name: newComment.galleryAccess.name,
+        email: newComment.galleryAccess.email,
         createdAt: newComment.createdAt,
         updatedAt: newComment.updatedAt
       }

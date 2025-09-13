@@ -20,6 +20,12 @@ interface Gallery {
   photos: {
     id: string;
   }[];
+  accessList?: {
+    id: string;
+    name: string;
+    email: string;
+    accessToken: string;
+  }[];
 }
 
 interface PhotoSession {
@@ -200,12 +206,42 @@ export function GalleryManagement() {
                 </p>
               </div>
 
+              {/* Access List */}
+              {gallery.accessList && gallery.accessList.length > 0 && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-md">
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">
+                    Access Links ({gallery.accessList.length} people)
+                  </h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {gallery.accessList.map((person) => (
+                      <div key={person.id} className="flex items-center justify-between text-xs">
+                        <span className="text-gray-700 truncate flex-1 mr-2">
+                          {person.name} ({person.email})
+                        </span>
+                        <button
+                          onClick={() => {
+                            const url = `${window.location.origin}/gallery/${gallery.shareToken}?access=${person.accessToken}`;
+                            navigator.clipboard.writeText(url);
+                            alert(`Link copied for ${person.name}!`);
+                          }}
+                          className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs hover:bg-blue-200 transition-colors whitespace-nowrap"
+                          title={`Copy personalized link for ${person.name}`}
+                        >
+                          Copy Link
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex space-x-2">
                 <button
                   onClick={() => copyGalleryLink(gallery.shareToken)}
                   className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
+                  title="Copy main gallery link"
                 >
-                  Copy Link
+                  {gallery.accessList && gallery.accessList.length > 0 ? "Copy Main Link" : "Copy Link"}
                 </button>
                 <Link
                   href={`/gallery/${gallery.shareToken}`}
@@ -235,6 +271,11 @@ interface CreateGalleryFormProps {
   onSuccess: () => void;
 }
 
+interface AccessPerson {
+  name: string;
+  email: string;
+}
+
 function CreateGalleryForm({
   sessions,
   onClose,
@@ -244,6 +285,7 @@ function CreateGalleryForm({
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [expiryDays, setExpiryDays] = useState(30);
+  const [accessList, setAccessList] = useState<AccessPerson[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -266,6 +308,20 @@ function CreateGalleryForm({
     setSelectedPhotos([]);
   };
 
+  const addAccessPerson = () => {
+    setAccessList([...accessList, { name: "", email: "" }]);
+  };
+
+  const removeAccessPerson = (index: number) => {
+    setAccessList(accessList.filter((_, i) => i !== index));
+  };
+
+  const updateAccessPerson = (index: number, field: "name" | "email", value: string) => {
+    const updated = [...accessList];
+    updated[index][field] = value;
+    setAccessList(updated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSessionId || selectedPhotos.length === 0 || !title.trim()) {
@@ -273,6 +329,25 @@ function CreateGalleryForm({
         "Please fill in all required fields and select at least one photo"
       );
       return;
+    }
+
+    // Validate access list - each person must have both name and email
+    const validAccessList = accessList.filter(person => 
+      person.name.trim() && person.email.trim()
+    );
+
+    if (accessList.length > 0 && validAccessList.length === 0) {
+      setError("Please complete all access list entries or remove empty ones");
+      return;
+    }
+
+    // Validate email formats
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    for (const person of validAccessList) {
+      if (!emailRegex.test(person.email)) {
+        setError(`Invalid email format: ${person.email}`);
+        return;
+      }
     }
 
     setLoading(true);
@@ -288,7 +363,8 @@ function CreateGalleryForm({
           title: title.trim(),
           sessionId: selectedSessionId,
           photoIds: selectedPhotos,
-          expiryDays
+          expiryDays,
+          accessList: validAccessList
         })
       });
 
@@ -406,6 +482,67 @@ function CreateGalleryForm({
               max="365"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Access List */}
+          <div>
+            <div className="flex justify-between items-center mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Gallery Access List
+              </label>
+              <button
+                type="button"
+                onClick={addAccessPerson}
+                className="text-sm bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition-colors"
+              >
+                Add Person
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Add people who can access this gallery. Each person will get a unique access link.
+            </p>
+            
+            {accessList.length === 0 ? (
+              <div className="text-center py-4 border-2 border-dashed border-gray-300 rounded-md">
+                <p className="text-gray-500 text-sm">No access list configured</p>
+                <p className="text-gray-400 text-xs">Gallery will be publicly accessible via the main link</p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-40 overflow-y-auto">
+                {accessList.map((person, index) => (
+                  <div key={index} className="flex gap-3 items-center bg-gray-50 p-3 rounded-md">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={person.name}
+                        onChange={(e) => updateAccessPerson(index, "name", e.target.value)}
+                        placeholder="Full Name"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        type="email"
+                        value={person.email}
+                        onChange={(e) => updateAccessPerson(index, "email", e.target.value)}
+                        placeholder="email@example.com"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAccessPerson(index)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                      title="Remove person"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Photo Selection */}

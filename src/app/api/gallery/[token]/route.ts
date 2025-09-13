@@ -8,6 +8,8 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { token } = await params;
+    const { searchParams } = new URL(request.url);
+    const accessToken = searchParams.get("access");
 
     // Find gallery by token
     const gallery = await prisma.gallery.findFirst({
@@ -20,19 +22,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           include: {
             photo: true,
             likes: {
-              select: {
-                id: true,
-                clientName: true,
-                createdAt: true
+              include: {
+                galleryAccess: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
               }
             },
             comments: {
-              select: {
-                id: true,
-                comment: true,
-                clientName: true,
-                createdAt: true,
-                updatedAt: true
+              include: {
+                galleryAccess: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
               },
               orderBy: { createdAt: "desc" }
             }
@@ -42,9 +50,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           include: {
             client: true
           }
-        }
+        },
+        accessList: true // Include gallery access list
       }
     });
+
+    if (!gallery) {
+      return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
+    }
+
+    // Check if access token is provided and valid
+    let currentUser = null;
+    if (accessToken) {
+      currentUser = await prisma.galleryAccess.findFirst({
+        where: {
+          accessToken: accessToken,
+          galleryId: gallery.id
+        }
+      });
+    }
 
     if (!gallery) {
       return NextResponse.json({ error: "Gallery not found" }, { status: 404 });
@@ -65,11 +89,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         description: gallery.description,
         createdAt: gallery.createdAt,
         expiresAt: gallery.expiresAt,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        photos: gallery.photos.map((gp: any) => ({
+        photos: gallery.photos.map((gp: (typeof gallery.photos)[0]) => ({
           ...gp.photo,
-          likes: gp.likes,
-          comments: gp.comments,
+          likes: gp.likes.map((like: (typeof gp.likes)[0]) => ({
+            id: like.id,
+            createdAt: like.createdAt,
+            name: like.galleryAccess.name,
+            email: like.galleryAccess.email
+          })),
+          comments: gp.comments.map((comment: (typeof gp.comments)[0]) => ({
+            id: comment.id,
+            comment: comment.comment,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+            name: comment.galleryAccess.name,
+            email: comment.galleryAccess.email
+          })),
           likeCount: gp.likes.length,
           commentCount: gp.comments.length
         })),
@@ -80,7 +115,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             name: gallery.session.client.name
           }
         }
-      }
+      },
+      currentUser: currentUser
+        ? {
+            id: currentUser.id,
+            name: currentUser.name,
+            email: currentUser.email,
+            accessToken: currentUser.accessToken
+          }
+        : null
     });
   } catch (error) {
     console.error("Gallery API error:", error);

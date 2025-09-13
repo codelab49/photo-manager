@@ -3,16 +3,20 @@ import ClientGalleryView from "./ClientGalleryView";
 
 interface PageProps {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ access?: string }>;
 }
 
-async function getGallery(token: string) {
+async function getGallery(token: string, accessToken?: string) {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-    const url = `${baseUrl}/api/gallery/${token}`;
+    const url = new URL(`${baseUrl}/api/gallery/${token}`);
+    if (accessToken) {
+      url.searchParams.set("access", accessToken);
+    }
 
-    console.log("Fetching gallery from:", url);
+    console.log("Fetching gallery from:", url.toString());
 
-    const response = await fetch(url, {
+    const response = await fetch(url.toString(), {
       cache: "no-store" // Always fetch fresh data for client galleries
     });
 
@@ -36,18 +40,28 @@ async function getGallery(token: string) {
   }
 }
 
-export default async function ClientGalleryPage({ params }: PageProps) {
+export default async function ClientGalleryPage({
+  params,
+  searchParams
+}: PageProps) {
   const { token } = await params;
-  const data = await getGallery(token);
+  const { access: accessToken } = await searchParams;
+  const data = await getGallery(token, accessToken);
 
   if (!data || !data.gallery) {
     notFound();
   }
 
-  return <ClientGalleryView gallery={data.gallery} token={token} />;
+  return (
+    <ClientGalleryView
+      gallery={data.gallery}
+      token={token}
+      currentUser={data.currentUser || null}
+    />
+  );
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params, searchParams }: PageProps) {
   const { token } = await params;
   const data = await getGallery(token);
 

@@ -7,35 +7,43 @@ export async function POST(
 ) {
   try {
     const { photoId, token } = await params;
-    const { clientName, clientEmail } = await request.json();
+    const { accessToken } = await request.json();
 
-    if (!clientName) {
+    if (!accessToken) {
       return NextResponse.json(
-        { error: "Client name is required" },
+        { error: "Access token is required" },
         { status: 400 }
       );
     }
 
-    // Verify gallery exists and is active
-    const gallery = await prisma.gallery.findUnique({
-      where: { shareToken: token },
+    // Verify access token and get gallery access
+    const galleryAccess = await prisma.galleryAccess.findFirst({
+      where: {
+        accessToken: accessToken,
+        gallery: {
+          shareToken: token,
+          isActive: true
+        }
+      },
       include: {
-        photos: {
-          where: { photoId },
+        gallery: {
           include: {
-            likes: true,
-            photo: true
+            photos: {
+              where: { photoId }
+            }
           }
         }
       }
     });
 
-    if (!gallery || !gallery.isActive) {
+    if (!galleryAccess) {
       return NextResponse.json(
-        { error: "Gallery not found or inactive" },
-        { status: 404 }
+        { error: "Invalid access token or gallery not found" },
+        { status: 403 }
       );
     }
+
+    const gallery = galleryAccess.gallery;
 
     // Check if gallery has expired
     if (gallery.expiresAt && gallery.expiresAt < new Date()) {
@@ -53,19 +61,19 @@ export async function POST(
       );
     }
 
-    // Check if already liked by this client
+    // Check if already liked by this user
     const existingLike = await prisma.photoLike.findUnique({
       where: {
-        galleryPhotoId_clientName: {
+        galleryPhotoId_galleryAccessId: {
           galleryPhotoId: galleryPhoto.id,
-          clientName: clientName
+          galleryAccessId: galleryAccess.id
         }
       }
     });
 
     if (existingLike) {
       return NextResponse.json(
-        { error: "Photo already liked by this client" },
+        { error: "Photo already liked by this user" },
         { status: 409 }
       );
     }
@@ -74,8 +82,15 @@ export async function POST(
     const like = await prisma.photoLike.create({
       data: {
         galleryPhotoId: galleryPhoto.id,
-        clientName,
-        clientEmail: clientEmail || null
+        galleryAccessId: galleryAccess.id
+      },
+      include: {
+        galleryAccess: {
+          select: {
+            name: true,
+            email: true
+          }
+        }
       }
     });
 
@@ -88,7 +103,8 @@ export async function POST(
       success: true,
       like: {
         id: like.id,
-        clientName: like.clientName,
+        name: like.galleryAccess.name,
+        email: like.galleryAccess.email,
         createdAt: like.createdAt
       },
       likeCount
@@ -108,33 +124,46 @@ export async function DELETE(
 ) {
   try {
     const { photoId, token } = await params;
-    const { clientName } = await request.json();
+    const { accessToken } = await request.json();
 
-    if (!clientName) {
+    if (!accessToken) {
       return NextResponse.json(
-        { error: "Client name is required" },
+        { error: "Access token is required" },
         { status: 400 }
       );
     }
 
-    // Verify gallery exists and is active
-    const gallery = await prisma.gallery.findUnique({
-      where: { shareToken: token },
+    // Verify access token and get gallery access
+    const galleryAccess = await prisma.galleryAccess.findFirst({
+      where: {
+        accessToken: accessToken,
+        gallery: {
+          shareToken: token,
+          isActive: true
+        }
+      },
       include: {
-        photos: {
-          where: { photoId }
+        gallery: {
+          include: {
+            photos: {
+              where: { photoId }
+            }
+          }
         }
       }
     });
 
-    if (!gallery || !gallery.isActive) {
+    if (!galleryAccess) {
       return NextResponse.json(
-        { error: "Gallery not found or inactive" },
-        { status: 404 }
+        { error: "Invalid access token or gallery not found" },
+        { status: 403 }
       );
     }
 
-    const galleryPhoto = gallery.photos.find((gp) => gp.photoId === photoId);
+    const gallery = galleryAccess.gallery;
+    const galleryPhoto = gallery.photos.find(
+      (gp: any) => gp.photoId === photoId
+    );
     if (!galleryPhoto) {
       return NextResponse.json(
         { error: "Photo not found in gallery" },
@@ -145,9 +174,9 @@ export async function DELETE(
     // Delete the like
     await prisma.photoLike.delete({
       where: {
-        galleryPhotoId_clientName: {
+        galleryPhotoId_galleryAccessId: {
           galleryPhotoId: galleryPhoto.id,
-          clientName: clientName
+          galleryAccessId: galleryAccess.id
         }
       }
     });

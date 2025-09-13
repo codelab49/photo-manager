@@ -46,3 +46,31 @@ export interface User {
   name?: string | null;
   email?: string | null;
 }
+
+export interface GalleryAccess {
+  id: string;
+  email: string;
+  name: string;
+  accessToken: string;
+  galleryId: string;
+}
+
+export interface PhotoLike {
+  id: string;
+  galleryAccess: {
+    name: string;
+    email: string;
+  };
+  createdAt: Date;
+}
+
+export interface PhotoComment {
+  id: string;
+  comment: string;
+  galleryAccess: {
+    name: string;
+    email: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}

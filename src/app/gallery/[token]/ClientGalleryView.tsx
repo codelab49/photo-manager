@@ -5,14 +5,16 @@ import { useState } from "react";
 
 interface PhotoLike {
   id: string;
-  clientName: string;
+  name: string;
+  email: string;
   createdAt: string;
 }
 
 interface PhotoComment {
   id: string;
   comment: string;
-  clientName: string;
+  name: string;
+  email: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -47,23 +49,28 @@ interface Gallery {
   };
 }
 
+interface CurrentUser {
+  id: string;
+  name: string;
+  email: string;
+  accessToken: string;
+}
+
 interface ClientGalleryViewProps {
   gallery: Gallery;
   token: string;
+  currentUser: CurrentUser | null;
 }
 
 export default function ClientGalleryView({
   gallery,
-  token
+  token,
+  currentUser
 }: ClientGalleryViewProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "slideshow">("grid");
   const [filter, setFilter] = useState<"all" | "liked">("all");
-  const [clientName, setClientName] = useState("");
-  const [clientEmail, setClientEmail] = useState("");
-  const [showClientForm, setShowClientForm] = useState(true);
   const [likedPhotos, setLikedPhotos] = useState<Set<string>>(new Set());
-  const [editingComment, setEditingComment] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
 
   // Disable keyboard shortcuts that might allow saving
@@ -77,8 +84,8 @@ export default function ClientGalleryView({
 
   // Handle like/unlike photo
   const handleLikePhoto = async (photoId: string) => {
-    if (!clientName) {
-      alert("Please enter your name first");
+    if (!currentUser) {
+      alert("Access token not found. Please use the correct gallery link.");
       return;
     }
 
@@ -93,7 +100,7 @@ export default function ClientGalleryView({
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ clientName, clientEmail })
+          body: JSON.stringify({ accessToken: currentUser.accessToken })
         }
       );
 
@@ -115,10 +122,12 @@ export default function ClientGalleryView({
     }
   };
 
-  // Handle adding comment
-  const handleAddComment = async (photoId: string, comment: string) => {
-    if (!clientName || !comment.trim()) {
-      alert("Please enter your name and a comment");
+  // Handle comment submission
+  const handleCommentSubmit = async (photoId: string, comment: string) => {
+    if (!currentUser || !comment.trim()) {
+      alert(
+        "Access token not found or comment is empty. Please use the correct gallery link."
+      );
       return;
     }
 
@@ -132,8 +141,7 @@ export default function ClientGalleryView({
           },
           body: JSON.stringify({
             comment: comment.trim(),
-            clientName,
-            clientEmail
+            accessToken: currentUser.accessToken
           })
         }
       );
@@ -268,66 +276,38 @@ export default function ClientGalleryView({
           </div>
         </div>
       </header>
-
-      {/* Client Information Form */}
-      {showClientForm && (
-        <div className="bg-blue-50 border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  Your Information
-                </h3>
-                <button
-                  onClick={() => setShowClientForm(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="clientName"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Your Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="clientName"
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your name"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="clientEmail"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    Your Email (optional)
-                  </label>
-                  <input
-                    type="email"
-                    id="clientEmail"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your email"
-                  />
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-gray-600">
-                Enter your name to like photos and leave comments. This helps
-                the photographer know who provided feedback.
+      {/* Welcome Message for Authenticated Users */}
+      {currentUser && (
+        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">
+                  Welcome, {currentUser.name}!
+                </span>
+                <br />
+                You can like photos and leave comments. Your feedback will be
+                attributed to you automatically.
               </p>
             </div>
           </div>
         </div>
       )}
-
+      {/* Access Required Message for Non-Authenticated Users */}
+      {!currentUser && (
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-amber-700">
+                <span className="font-medium">Access Required</span>
+                <br />
+                Please use the personalized link provided by your photographer
+                to like photos and leave comments.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}{" "}
       {/* Filter Tabs */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -355,7 +335,6 @@ export default function ClientGalleryView({
           </div>
         </div>
       </div>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {filteredPhotos.length > 0 ? (
           viewMode === "grid" ? (
@@ -501,7 +480,6 @@ export default function ClientGalleryView({
           </div>
         )}
       </main>
-
       {/* Photo Modal with Comments */}
       {selectedPhoto && viewMode === "grid" && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
@@ -581,7 +559,7 @@ export default function ClientGalleryView({
                   <div key={comment.id} className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="font-medium text-sm text-gray-900">
-                        {comment.clientName}
+                        {comment.name}
                       </span>
                       <span className="text-xs text-gray-500">
                         {formatDate(comment.createdAt)}
@@ -605,36 +583,37 @@ export default function ClientGalleryView({
               </div>
 
               {/* Add Comment Form */}
-              <div className="p-4 border-t">
-                <textarea
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder={
-                    clientName
-                      ? "Write a comment..."
-                      : "Enter your name first to comment"
-                  }
-                  disabled={!clientName}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                  rows={3}
-                />
-                <div className="mt-2 flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    {clientName
-                      ? `Commenting as: ${clientName}`
-                      : "Please enter your name in the form above"}
-                  </span>
-                  <button
-                    onClick={() =>
-                      handleAddComment(selectedPhoto.id, commentText)
-                    }
-                    disabled={!clientName || !commentText.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                  >
-                    Post
-                  </button>
+              {currentUser && (
+                <div className="p-4 border-t">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                  <div className="mt-2 flex justify-between items-center">
+                    <span className="text-xs text-gray-500">
+                      Commenting as: {currentUser.name}
+                    </span>
+                    <button
+                      onClick={async () => {
+                        await handleCommentSubmit(
+                          selectedPhoto.id,
+                          commentText
+                        );
+                        setCommentText("");
+                        // Refresh the page to show new comment
+                        window.location.reload();
+                      }}
+                      disabled={!commentText.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    >
+                      Post
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

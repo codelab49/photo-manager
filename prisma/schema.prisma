@@ -109,8 +109,27 @@ model Gallery {
   clientId  String
   client    Client        @relation(fields: [clientId], references: [id])
   photos    GalleryPhoto[]
+  accessList GalleryAccess[] // Who can access this gallery
   
   @@map("galleries")
+}
+
+model GalleryAccess {
+  id          String       @id @default(cuid())
+  email       String       // Allowed email address
+  name        String       // Person's name
+  accessToken String       @unique // Unique token for this person's access to this gallery
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // Relations
+  galleryId String
+  gallery   Gallery      @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  likes     PhotoLike[]
+  comments  PhotoComment[]
+  
+  @@unique([galleryId, email])
+  @@map("gallery_access")
 }
 
 model GalleryPhoto {
@@ -131,29 +150,29 @@ model GalleryPhoto {
 
 model PhotoLike {
   id             String       @id @default(cuid())
-  clientName     String       // Client's name who liked the photo
-  clientEmail    String?      // Optional client email
   createdAt      DateTime     @default(now())
   
   // Relations
   galleryPhotoId String
   galleryPhoto   GalleryPhoto @relation(fields: [galleryPhotoId], references: [id])
+  galleryAccessId String
+  galleryAccess  GalleryAccess @relation(fields: [galleryAccessId], references: [id], onDelete: Cascade)
   
-  @@unique([galleryPhotoId, clientName])
+  @@unique([galleryPhotoId, galleryAccessId])
   @@map("photo_likes")
 }
 
 model PhotoComment {
-  id             String       @id @default(cuid())
+  id             String        @id @default(cuid())
   comment        String
-  clientName     String       // Client's name who commented
-  clientEmail    String?      // Optional client email
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
   
   // Relations
   galleryPhotoId String
-  galleryPhoto   GalleryPhoto @relation(fields: [galleryPhotoId], references: [id])
+  galleryPhoto   GalleryPhoto  @relation(fields: [galleryPhotoId], references: [id])
+  galleryAccessId String
+  galleryAccess  GalleryAccess @relation(fields: [galleryAccessId], references: [id], onDelete: Cascade)
   
   @@map("photo_comments")
 }
