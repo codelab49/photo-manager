@@ -33,8 +33,15 @@ interface PhotoSession {
   title: string;
   sessionDate: string;
   client: {
+    id: string;
     name: string;
     email: string;
+    recipients?: {
+      id: string;
+      name: string;
+      email: string;
+      relation?: string;
+    }[];
   };
   photos: {
     id: string;
@@ -458,8 +465,33 @@ function CreateGalleryForm({
               id="session"
               value={selectedSessionId}
               onChange={(e) => {
-                setSelectedSessionId(e.target.value);
+                const sessionId = e.target.value;
+                setSelectedSessionId(sessionId);
                 setSelectedPhotos([]);
+
+                // Auto-populate access list with client recipients
+                const session = sessions.find((s) => s.id === sessionId);
+                if (session && session.client.recipients) {
+                  const clientRecipients = session.client.recipients.map(
+                    (recipient) => ({
+                      name: recipient.name,
+                      email: recipient.email
+                    })
+                  );
+                  setAccessList(clientRecipients);
+                } else {
+                  // If no recipients, clear access list or add primary client email
+                  setAccessList(
+                    session
+                      ? [
+                          {
+                            name: session.client.name,
+                            email: session.client.email
+                          }
+                        ]
+                      : []
+                  );
+                }
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
@@ -508,7 +540,8 @@ function CreateGalleryForm({
               </button>
             </div>
             <p className="text-xs text-gray-500 mb-3">
-              Add people who can access this gallery. Each person will get a
+              Recipients from client management are auto-loaded. You can add
+              additional people or modify as needed. Each person will get a
               unique access link.
             </p>
 

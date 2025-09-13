@@ -28,8 +28,17 @@ export async function GET() {
       include: {
         client: {
           select: {
+            id: true,
             name: true,
-            email: true
+            email: true,
+            recipients: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                relation: true
+              }
+            }
           }
         },
         photos: {

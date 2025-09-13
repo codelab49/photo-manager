@@ -109,7 +109,7 @@ export default function DashboardClient({
               Create New Session
             </Link>
             <Link
-              href="/clients"
+              href="/dashboard/clients"
               className="bg-green-600 hover:bg-green-700 text-white text-center py-3 px-4 rounded-lg transition-colors"
             >
               Manage Clients

@@ -43,8 +43,25 @@ model Client {
   photographer   User           @relation(fields: [photographerId], references: [id])
   sessions       PhotoSession[]
   galleries      Gallery[]
+  recipients     ClientRecipient[] // People who should receive gallery access
   
   @@map("clients")
+}
+
+model ClientRecipient {
+  id        String   @id @default(cuid())
+  name      String   // Full name of the recipient
+  email     String   // Email address for gallery access
+  relation  String?  // e.g., "Bride", "Groom", "Mother", "Father", "Family Member"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  
+  @@unique([clientId, email])
+  @@map("client_recipients")
 }
 
 model PhotoSession {
