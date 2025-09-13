@@ -115,10 +115,10 @@ export default function DashboardClient({
               Manage Clients
             </Link>
             <Link
-              href="/galleries"
+              href="/dashboard/galleries"
               className="bg-purple-600 hover:bg-purple-700 text-white text-center py-3 px-4 rounded-lg transition-colors"
             >
-              View Galleries
+              Manage Galleries
             </Link>
           </div>
         </div>
