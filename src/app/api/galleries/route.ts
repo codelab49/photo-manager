@@ -88,7 +88,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, sessionId, photoIds, expiryDays = 30, accessList = [] } = body;
+    const {
+      title,
+      sessionId,
+      photoIds,
+      expiryDays = 30,
+      accessList = []
+    } = body;
 
     // Validate input
     if (
@@ -114,13 +120,18 @@ export async function POST(request: NextRequest) {
 
     // Validate each access list item
     for (const person of accessList) {
-      if (!person.name || !person.email || typeof person.name !== 'string' || typeof person.email !== 'string') {
+      if (
+        !person.name ||
+        !person.email ||
+        typeof person.name !== "string" ||
+        typeof person.email !== "string"
+      ) {
         return NextResponse.json(
           { error: "Each access list item must have name and email strings" },
           { status: 400 }
         );
       }
-      
+
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(person.email)) {

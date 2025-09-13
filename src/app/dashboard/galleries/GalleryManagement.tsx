@@ -214,7 +214,10 @@ export function GalleryManagement() {
                   </h4>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
                     {gallery.accessList.map((person) => (
-                      <div key={person.id} className="flex items-center justify-between text-xs">
+                      <div
+                        key={person.id}
+                        className="flex items-center justify-between text-xs"
+                      >
                         <span className="text-gray-700 truncate flex-1 mr-2">
                           {person.name} ({person.email})
                         </span>
@@ -241,7 +244,9 @@ export function GalleryManagement() {
                   className="flex-1 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
                   title="Copy main gallery link"
                 >
-                  {gallery.accessList && gallery.accessList.length > 0 ? "Copy Main Link" : "Copy Link"}
+                  {gallery.accessList && gallery.accessList.length > 0
+                    ? "Copy Main Link"
+                    : "Copy Link"}
                 </button>
                 <Link
                   href={`/gallery/${gallery.shareToken}`}
@@ -316,7 +321,11 @@ function CreateGalleryForm({
     setAccessList(accessList.filter((_, i) => i !== index));
   };
 
-  const updateAccessPerson = (index: number, field: "name" | "email", value: string) => {
+  const updateAccessPerson = (
+    index: number,
+    field: "name" | "email",
+    value: string
+  ) => {
     const updated = [...accessList];
     updated[index][field] = value;
     setAccessList(updated);
@@ -332,8 +341,8 @@ function CreateGalleryForm({
     }
 
     // Validate access list - each person must have both name and email
-    const validAccessList = accessList.filter(person => 
-      person.name.trim() && person.email.trim()
+    const validAccessList = accessList.filter(
+      (person) => person.name.trim() && person.email.trim()
     );
 
     if (accessList.length > 0 && validAccessList.length === 0) {
@@ -431,7 +440,7 @@ function CreateGalleryForm({
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
               placeholder="e.g., Wedding Photos - Preview"
               required
             />
@@ -452,7 +461,7 @@ function CreateGalleryForm({
                 setSelectedSessionId(e.target.value);
                 setSelectedPhotos([]);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
               required
             >
               <option value="">Select a session...</option>
@@ -480,7 +489,7 @@ function CreateGalleryForm({
               onChange={(e) => setExpiryDays(parseInt(e.target.value) || 30)}
               min="1"
               max="365"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
             />
           </div>
 
@@ -499,34 +508,46 @@ function CreateGalleryForm({
               </button>
             </div>
             <p className="text-xs text-gray-500 mb-3">
-              Add people who can access this gallery. Each person will get a unique access link.
+              Add people who can access this gallery. Each person will get a
+              unique access link.
             </p>
-            
+
             {accessList.length === 0 ? (
               <div className="text-center py-4 border-2 border-dashed border-gray-300 rounded-md">
-                <p className="text-gray-500 text-sm">No access list configured</p>
-                <p className="text-gray-400 text-xs">Gallery will be publicly accessible via the main link</p>
+                <p className="text-gray-500 text-sm">
+                  No access list configured
+                </p>
+                <p className="text-gray-400 text-xs">
+                  Gallery will be publicly accessible via the main link
+                </p>
               </div>
             ) : (
               <div className="space-y-3 max-h-40 overflow-y-auto">
                 {accessList.map((person, index) => (
-                  <div key={index} className="flex gap-3 items-center bg-gray-50 p-3 rounded-md">
+                  <div
+                    key={index}
+                    className="flex gap-3 items-center bg-gray-50 p-3 rounded-md"
+                  >
                     <div className="flex-1">
                       <input
                         type="text"
                         value={person.name}
-                        onChange={(e) => updateAccessPerson(index, "name", e.target.value)}
+                        onChange={(e) =>
+                          updateAccessPerson(index, "name", e.target.value)
+                        }
                         placeholder="Full Name"
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
                       />
                     </div>
                     <div className="flex-1">
                       <input
                         type="email"
                         value={person.email}
-                        onChange={(e) => updateAccessPerson(index, "email", e.target.value)}
+                        onChange={(e) =>
+                          updateAccessPerson(index, "email", e.target.value)
+                        }
                         placeholder="email@example.com"
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500"
                       />
                     </div>
                     <button
@@ -535,8 +556,18 @@ function CreateGalleryForm({
                       className="text-red-600 hover:text-red-800 p-1"
                       title="Remove person"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
