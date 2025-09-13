@@ -26,11 +26,7 @@ export default function SessionDetailClient({
     clientId: session.client.id,
     sessionDate: new Date(session.sessionDate).toISOString().slice(0, 16),
     location: session.location || "",
-    description: session.description || "",
-    clientName: session.client.name,
-    clientEmail: session.client.email,
-    clientPhone: session.client.phone || "",
-    recipients: session.client.recipients || []
+    description: session.description || ""
   });
 
   // Fetch clients when entering edit mode
@@ -112,40 +108,10 @@ export default function SessionDetailClient({
       clientId: session.client.id,
       sessionDate: new Date(session.sessionDate).toISOString().slice(0, 16),
       location: session.location || "",
-      description: session.description || "",
-      clientName: session.client.name,
-      clientEmail: session.client.email,
-      clientPhone: session.client.phone || "",
-      recipients: session.client.recipients || []
+      description: session.description || ""
     });
     setIsEditing(false);
     setError(null);
-  };
-
-  const addRecipient = () => {
-    setEditData((prev) => ({
-      ...prev,
-      recipients: [
-        ...prev.recipients,
-        { id: "", name: "", email: "", relation: "" }
-      ]
-    }));
-  };
-
-  const removeRecipient = (index: number) => {
-    setEditData((prev) => ({
-      ...prev,
-      recipients: prev.recipients.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateRecipient = (index: number, field: string, value: string) => {
-    setEditData((prev) => ({
-      ...prev,
-      recipients: prev.recipients.map((recipient, i) =>
-        i === index ? { ...recipient, [field]: value } : recipient
-      )
-    }));
   };
 
   const formatFileSize = (bytes: number) => {
@@ -358,77 +324,32 @@ export default function SessionDetailClient({
                   />
                 </div>
 
-                {/* Recipients */}
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Recipients
+                {/* Recipients Display (Read-only) */}
+                {editData.clientId && clients.find(c => c.id === editData.clientId)?.recipients && 
+                 clients.find(c => c.id === editData.clientId)!.recipients!.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Recipients (managed in client settings)
                     </label>
-                    <button
-                      type="button"
-                      onClick={addRecipient}
-                      className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded transition-colors"
-                    >
-                      Add Recipient
-                    </button>
-                  </div>
-                  {editData.recipients.map((recipient, index) => (
-                    <div
-                      key={index}
-                      className="border border-gray-200 rounded-lg p-4 mb-3"
-                    >
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700">
-                            Name
-                          </label>
-                          <input
-                            type="text"
-                            value={recipient.name}
-                            onChange={(e) =>
-                              updateRecipient(index, "name", e.target.value)
-                            }
-                            className="mt-1 block w-full px-2 py-1 text-sm bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {clients.find(c => c.id === editData.clientId)!.recipients!.map((recipient, index) => (
+                        <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                          <p className="font-medium text-gray-900">{recipient.name}</p>
+                          <p className="text-sm text-gray-600">{recipient.email}</p>
+                          {recipient.relation && (
+                            <p className="text-sm text-gray-500">{recipient.relation}</p>
+                          )}
                         </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700">
-                            Email
-                          </label>
-                          <input
-                            type="email"
-                            value={recipient.email}
-                            onChange={(e) =>
-                              updateRecipient(index, "email", e.target.value)
-                            }
-                            className="mt-1 block w-full px-2 py-1 text-sm bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700">
-                            Relation
-                          </label>
-                          <input
-                            type="text"
-                            value={recipient.relation || ""}
-                            onChange={(e) =>
-                              updateRecipient(index, "relation", e.target.value)
-                            }
-                            className="mt-1 block w-full px-2 py-1 text-sm bg-white text-gray-900 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g., Spouse, Child"
-                          />
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeRecipient(index)}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800"
-                      >
-                        Remove Recipient
-                      </button>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      To modify recipients, edit the client in{" "}
+                      <a href="/dashboard/clients" className="text-blue-600 hover:text-blue-500">
+                        Client Management
+                      </a>
+                    </p>
+                  </div>
+                )}
 
                 {/* Form Actions */}
                 <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
