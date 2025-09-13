@@ -13,26 +13,31 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const gallery = await prisma.gallery.findFirst({
       where: {
         shareToken: token,
-        isActive: true,
+        isActive: true
       },
       include: {
         photos: {
-          select: {
-            id: true,
-            originalName: true,
-            previewPath: true,
-            thumbnailPath: true,
-            width: true,
-            height: true,
-            size: true,
-          },
+          include: {
+            photo: {
+              select: {
+                id: true,
+                filename: true,
+                originalName: true,
+                previewPath: true,
+                thumbnailPath: true,
+                width: true,
+                height: true,
+                size: true
+              }
+            }
+          }
         },
         session: {
           include: {
-            client: true,
-          },
-        },
-      },
+            client: true
+          }
+        }
+      }
     });
 
     if (!gallery) {
@@ -41,7 +46,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Check if gallery has expired
     if (gallery.expiresAt && new Date() > gallery.expiresAt) {
-      return NextResponse.json({ error: "Gallery has expired" }, { status: 410 });
+      return NextResponse.json(
+        { error: "Gallery has expired" },
+        { status: 410 }
+      );
     }
 
     return NextResponse.json({
@@ -51,15 +59,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         description: gallery.description,
         createdAt: gallery.createdAt,
         expiresAt: gallery.expiresAt,
-        photos: gallery.photos,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        photos: gallery.photos.map((gp: any) => gp.photo),
         session: {
           title: gallery.session.title,
           date: gallery.session.sessionDate,
           client: {
-            name: gallery.session.client.name,
-          },
-        },
-      },
+            name: gallery.session.client.name
+          }
+        }
+      }
     });
   } catch (error) {
     console.error("Gallery API error:", error);

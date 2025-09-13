@@ -7,20 +7,29 @@ interface PageProps {
 
 async function getGallery(token: string) {
   try {
-    const response = await fetch(
-      `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/gallery/${token}`,
-      {
-        cache: "no-store" // Always fetch fresh data for client galleries
-      }
-    );
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const url = `${baseUrl}/api/gallery/${token}`;
+
+    console.log("Fetching gallery from:", url);
+
+    const response = await fetch(url, {
+      cache: "no-store" // Always fetch fresh data for client galleries
+    });
+
+    console.log("Gallery fetch response status:", response.status);
 
     if (!response.ok) {
+      console.log(
+        "Gallery fetch failed:",
+        response.status,
+        response.statusText
+      );
       return null;
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log("Gallery data received:", data);
+    return data;
   } catch (error) {
     console.error("Failed to fetch gallery:", error);
     return null;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { addWatermark } from "@/lib/image-utils";
-import { readFile } from "fs/promises";
+import { downloadFromGCS } from "@/lib/gcs-utils";
 
 export async function GET(
   request: NextRequest,
@@ -45,58 +45,40 @@ export async function GET(
     }
 
     const photo = galleryPhoto.photo;
-    const originalPath = photo.path;
-
-    // Generate watermarked version path
-    const watermarkedPath = originalPath.replace(
-      /\.(jpg|jpeg|png)$/i,
-      "_watermarked.$1"
-    );
+    const type = request.nextUrl.searchParams.get("type") || "preview";
 
     try {
-      // Try to read existing watermarked version
-      const watermarkedImage = await readFile(watermarkedPath);
+      // Download original image from GCS
+      const originalBuffer = await downloadFromGCS(photo.path);
 
-      return new NextResponse(new Uint8Array(watermarkedImage), {
+      // Apply watermark to create preview or thumbnail
+      const watermarkedBuffer = await addWatermark(originalBuffer, {
+        text:
+          type === "thumbnail"
+            ? gallery.title
+            : "Preview Only - " + gallery.title,
+        opacity: type === "thumbnail" ? 0.5 : 0.7,
+        fontSize: type === "thumbnail" ? 24 : 36
+      });
+
+      return new NextResponse(new Uint8Array(watermarkedBuffer), {
         headers: {
-          "Content-Type": photo.mimeType,
+          "Content-Type": photo.mimeType || "image/jpeg",
           "Cache-Control": "public, max-age=3600",
           "Content-Disposition": "inline"
         }
       });
-    } catch {
-      // Generate watermarked version if it doesn't exist
-      const watermarkSuccess = await addWatermark(
-        originalPath,
-        watermarkedPath,
-        {
-          text: "Preview Only - " + gallery.title,
-          opacity: 0.7,
-          fontSize: 36
-        }
+    } catch (error) {
+      console.error("Image serving error:", error);
+      return NextResponse.json(
+        { error: "Failed to serve image" },
+        { status: 500 }
       );
-
-      if (!watermarkSuccess) {
-        return NextResponse.json(
-          { error: "Failed to generate watermarked image" },
-          { status: 500 }
-        );
-      }
-
-      const watermarkedImage = await readFile(watermarkedPath);
-
-      return new NextResponse(new Uint8Array(watermarkedImage), {
-        headers: {
-          "Content-Type": photo.mimeType,
-          "Cache-Control": "public, max-age=3600",
-          "Content-Disposition": "inline"
-        }
-      });
     }
   } catch (error) {
-    console.error("Image serving error:", error);
+    console.error("Gallery API error:", error);
     return NextResponse.json(
-      { error: "Failed to serve image" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

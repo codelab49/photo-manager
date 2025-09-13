@@ -1,62 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { v4 as uuidv4 } from 'uuid';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { v4 as uuidv4 } from "uuid";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email }
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Get all galleries for this user
     const galleries = await prisma.gallery.findMany({
       where: {
         session: {
-          photographerId: user.id,
-        },
+          photographerId: user.id
+        }
       },
       include: {
         session: {
           select: {
             title: true,
-            sessionDate: true,
-          },
+            sessionDate: true
+          }
         },
         client: {
           select: {
             name: true,
-            email: true,
-          },
+            email: true
+          }
         },
         photos: {
           select: {
-            id: true,
-          },
-        },
+            id: true
+          }
+        }
       },
       orderBy: {
-        createdAt: 'desc',
-      },
+        createdAt: "desc"
+      }
     });
 
     return NextResponse.json(galleries);
   } catch (error) {
-    console.error('Error fetching galleries:', error);
+    console.error("Error fetching galleries:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch galleries' },
+      { error: "Failed to fetch galleries" },
       { status: 500 }
     );
   }
@@ -65,27 +65,33 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email }
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const body = await request.json();
     const { title, sessionId, photoIds, expiryDays = 30 } = body;
 
     // Validate input
-    if (!title || !sessionId || !photoIds || !Array.isArray(photoIds) || photoIds.length === 0) {
+    if (
+      !title ||
+      !sessionId ||
+      !photoIds ||
+      !Array.isArray(photoIds) ||
+      photoIds.length === 0
+    ) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, sessionId, and photoIds' },
+        { error: "Missing required fields: title, sessionId, and photoIds" },
         { status: 400 }
       );
     }
@@ -94,16 +100,16 @@ export async function POST(request: NextRequest) {
     const photoSession = await prisma.photoSession.findFirst({
       where: {
         id: sessionId,
-        photographerId: user.id,
+        photographerId: user.id
       },
       include: {
-        client: true,
-      },
+        client: true
+      }
     });
 
     if (!photoSession) {
       return NextResponse.json(
-        { error: 'Photo session not found or access denied' },
+        { error: "Photo session not found or access denied" },
         { status: 404 }
       );
     }
@@ -112,13 +118,13 @@ export async function POST(request: NextRequest) {
     const photos = await prisma.photo.findMany({
       where: {
         id: { in: photoIds },
-        sessionId: sessionId,
-      },
+        sessionId: sessionId
+      }
     });
 
     if (photos.length !== photoIds.length) {
       return NextResponse.json(
-        { error: 'Some photos not found or do not belong to this session' },
+        { error: "Some photos not found or do not belong to this session" },
         { status: 400 }
       );
     }
@@ -136,36 +142,36 @@ export async function POST(request: NextRequest) {
         clientId: photoSession.clientId,
         photos: {
           create: photoIds.map((photoId: string) => ({
-            photoId,
-          })),
-        },
+            photoId
+          }))
+        }
       },
       include: {
         session: {
           select: {
             title: true,
-            sessionDate: true,
-          },
+            sessionDate: true
+          }
         },
         client: {
           select: {
             name: true,
-            email: true,
-          },
+            email: true
+          }
         },
         photos: {
           select: {
-            id: true,
-          },
-        },
-      },
+            id: true
+          }
+        }
+      }
     });
 
     return NextResponse.json(gallery, { status: 201 });
   } catch (error) {
-    console.error('Error creating gallery:', error);
+    console.error("Error creating gallery:", error);
     return NextResponse.json(
-      { error: 'Failed to create gallery' },
+      { error: "Failed to create gallery" },
       { status: 500 }
     );
   }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Gallery {
   id: string;
@@ -51,46 +51,50 @@ export function GalleryManagement() {
 
   const fetchGalleries = async () => {
     try {
-      const response = await fetch('/api/galleries');
-      if (!response.ok) throw new Error('Failed to fetch galleries');
+      const response = await fetch("/api/galleries");
+      if (!response.ok) throw new Error("Failed to fetch galleries");
       const data = await response.json();
       setGalleries(data);
     } catch (err) {
-      console.error('Error fetching galleries:', err);
-      setError('Failed to load galleries');
+      console.error("Error fetching galleries:", err);
+      setError("Failed to load galleries");
     }
   };
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch('/api/sessions');
-      if (!response.ok) throw new Error('Failed to fetch sessions');
+      const response = await fetch("/api/sessions");
+      if (!response.ok) throw new Error("Failed to fetch sessions");
       const data = await response.json();
       setSessions(data);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching sessions:', err);
-      setError('Failed to load sessions');
+      console.error("Error fetching sessions:", err);
+      setError("Failed to load sessions");
       setLoading(false);
     }
   };
 
   const deleteGallery = async (galleryId: string) => {
-    if (!confirm('Are you sure you want to delete this gallery? This cannot be undone.')) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this gallery? This cannot be undone."
+      )
+    ) {
       return;
     }
 
     try {
       const response = await fetch(`/api/galleries/${galleryId}`, {
-        method: 'DELETE',
+        method: "DELETE"
       });
 
-      if (!response.ok) throw new Error('Failed to delete gallery');
-      
-      setGalleries(galleries.filter(g => g.id !== galleryId));
+      if (!response.ok) throw new Error("Failed to delete gallery");
+
+      setGalleries(galleries.filter((g) => g.id !== galleryId));
     } catch (err) {
-      console.error('Error deleting gallery:', err);
-      setError('Failed to delete gallery');
+      console.error("Error deleting gallery:", err);
+      setError("Failed to delete gallery");
     }
   };
 
@@ -98,7 +102,7 @@ export function GalleryManagement() {
     const url = `${window.location.origin}/gallery/${token}`;
     navigator.clipboard.writeText(url);
     // You could add a toast notification here
-    alert('Gallery link copied to clipboard!');
+    alert("Gallery link copied to clipboard!");
   };
 
   if (loading) {
@@ -113,7 +117,7 @@ export function GalleryManagement() {
     return (
       <div className="bg-red-50 border border-red-200 rounded-md p-4">
         <p className="text-red-800">{error}</p>
-        <button 
+        <button
           onClick={() => {
             setError(null);
             fetchGalleries();
@@ -142,7 +146,7 @@ export function GalleryManagement() {
 
       {/* Create Gallery Form */}
       {showCreateForm && (
-        <CreateGalleryForm 
+        <CreateGalleryForm
           sessions={sessions}
           onClose={() => setShowCreateForm(false)}
           onSuccess={() => {
@@ -166,13 +170,17 @@ export function GalleryManagement() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {galleries.map((gallery) => (
-            <div key={gallery.id} className="bg-white rounded-lg shadow-md p-6 border">
+            <div
+              key={gallery.id}
+              className="bg-white rounded-lg shadow-md p-6 border"
+            >
               <div className="mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-1">
                   {gallery.title}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  {gallery.session.title} • {new Date(gallery.session.sessionDate).toLocaleDateString()}
+                  {gallery.session.title} •{" "}
+                  {new Date(gallery.session.sessionDate).toLocaleDateString()}
                 </p>
                 <p className="text-sm text-gray-600">
                   Client: {gallery.client.name}
@@ -181,7 +189,8 @@ export function GalleryManagement() {
 
               <div className="mb-4">
                 <p className="text-sm text-gray-600">
-                  {gallery.photos.length} photo{gallery.photos.length !== 1 ? 's' : ''}
+                  {gallery.photos.length} photo
+                  {gallery.photos.length !== 1 ? "s" : ""}
                 </p>
                 <p className="text-xs text-gray-500">
                   Created: {new Date(gallery.createdAt).toLocaleDateString()}
@@ -226,27 +235,31 @@ interface CreateGalleryFormProps {
   onSuccess: () => void;
 }
 
-function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormProps) {
-  const [selectedSessionId, setSelectedSessionId] = useState('');
+function CreateGalleryForm({
+  sessions,
+  onClose,
+  onSuccess
+}: CreateGalleryFormProps) {
+  const [selectedSessionId, setSelectedSessionId] = useState("");
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [expiryDays, setExpiryDays] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedSession = sessions.find(s => s.id === selectedSessionId);
+  const selectedSession = sessions.find((s) => s.id === selectedSessionId);
 
   const togglePhoto = (photoId: string) => {
-    setSelectedPhotos(prev => 
-      prev.includes(photoId) 
-        ? prev.filter(id => id !== photoId)
+    setSelectedPhotos((prev) =>
+      prev.includes(photoId)
+        ? prev.filter((id) => id !== photoId)
         : [...prev, photoId]
     );
   };
 
   const selectAllPhotos = () => {
     if (!selectedSession) return;
-    setSelectedPhotos(selectedSession.photos.map(p => p.id));
+    setSelectedPhotos(selectedSession.photos.map((p) => p.id));
   };
 
   const clearSelection = () => {
@@ -256,7 +269,9 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSessionId || selectedPhotos.length === 0 || !title.trim()) {
-      setError('Please fill in all required fields and select at least one photo');
+      setError(
+        "Please fill in all required fields and select at least one photo"
+      );
       return;
     }
 
@@ -264,28 +279,28 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
     setError(null);
 
     try {
-      const response = await fetch('/api/galleries', {
-        method: 'POST',
+      const response = await fetch("/api/galleries", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           title: title.trim(),
           sessionId: selectedSessionId,
           photoIds: selectedPhotos,
-          expiryDays,
-        }),
+          expiryDays
+        })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create gallery');
+        throw new Error(errorData.error || "Failed to create gallery");
       }
 
       onSuccess();
     } catch (err) {
-      console.error('Error creating gallery:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create gallery');
+      console.error("Error creating gallery:", err);
+      setError(err instanceof Error ? err.message : "Failed to create gallery");
     } finally {
       setLoading(false);
     }
@@ -296,13 +311,25 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Create New Gallery</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Create New Gallery
+            </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -317,7 +344,10 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
 
           {/* Gallery Title */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Gallery Title *
             </label>
             <input
@@ -333,7 +363,10 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
 
           {/* Session Selection */}
           <div>
-            <label htmlFor="session" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="session"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Photo Session *
             </label>
             <select
@@ -349,7 +382,8 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
               <option value="">Select a session...</option>
               {sessions.map((session) => (
                 <option key={session.id} value={session.id}>
-                  {session.title} - {session.client.name} ({new Date(session.sessionDate).toLocaleDateString()})
+                  {session.title} - {session.client.name} (
+                  {new Date(session.sessionDate).toLocaleDateString()})
                 </option>
               ))}
             </select>
@@ -357,7 +391,10 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
 
           {/* Expiry Days */}
           <div>
-            <label htmlFor="expiryDays" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="expiryDays"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Gallery Expires After (days)
             </label>
             <input
@@ -402,8 +439,8 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
                     key={photo.id}
                     className={`relative aspect-square cursor-pointer rounded-md overflow-hidden border-2 transition-all ${
                       selectedPhotos.includes(photo.id)
-                        ? 'border-blue-500 ring-2 ring-blue-200'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? "border-blue-500 ring-2 ring-blue-200"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                     onClick={() => togglePhoto(photo.id)}
                   >
@@ -416,17 +453,35 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-6 h-6 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
-                    
+
                     {selectedPhotos.includes(photo.id) && (
                       <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
                         <div className="bg-blue-500 text-white rounded-full p-1">
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       </div>
@@ -448,10 +503,15 @@ function CreateGalleryForm({ sessions, onClose, onSuccess }: CreateGalleryFormPr
             </button>
             <button
               type="submit"
-              disabled={loading || !selectedSessionId || selectedPhotos.length === 0 || !title.trim()}
+              disabled={
+                loading ||
+                !selectedSessionId ||
+                selectedPhotos.length === 0 ||
+                !title.trim()
+              }
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? 'Creating...' : 'Create Gallery'}
+              {loading ? "Creating..." : "Create Gallery"}
             </button>
           </div>
         </form>

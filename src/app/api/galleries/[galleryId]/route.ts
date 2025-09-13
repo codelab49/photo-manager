@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 interface Params {
   galleryId: string;
@@ -13,18 +13,18 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get user
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: session.user.email }
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const { galleryId } = params;
@@ -34,28 +34,28 @@ export async function DELETE(
       where: {
         id: galleryId,
         session: {
-          photographerId: user.id,
-        },
-      },
+          photographerId: user.id
+        }
+      }
     });
 
     if (!gallery) {
       return NextResponse.json(
-        { error: 'Gallery not found or access denied' },
+        { error: "Gallery not found or access denied" },
         { status: 404 }
       );
     }
 
     // Delete the gallery
     await prisma.gallery.delete({
-      where: { id: galleryId },
+      where: { id: galleryId }
     });
 
-    return NextResponse.json({ message: 'Gallery deleted successfully' });
+    return NextResponse.json({ message: "Gallery deleted successfully" });
   } catch (error) {
-    console.error('Error deleting gallery:', error);
+    console.error("Error deleting gallery:", error);
     return NextResponse.json(
-      { error: 'Failed to delete gallery' },
+      { error: "Failed to delete gallery" },
       { status: 500 }
     );
   }

@@ -111,3 +111,31 @@ export async function fileExistsInGCS(filename: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Download file from Google Cloud Storage
+ */
+export async function downloadFromGCS(filePath: string): Promise<Buffer> {
+  try {
+    // Extract filename from GCS URL
+    let filename = filePath;
+    if (filePath.startsWith("https://storage.googleapis.com/")) {
+      const urlParts = filePath.split("/");
+      // Remove the protocol, domain, and bucket name to get the file path
+      filename = urlParts.slice(4).join("/");
+    }
+
+    const file = bucket.file(filename);
+    const [exists] = await file.exists();
+
+    if (!exists) {
+      throw new Error(`File not found: ${filename}`);
+    }
+
+    const [buffer] = await file.download();
+    return buffer;
+  } catch (error) {
+    console.error("GCS Download Error:", error);
+    throw error;
+  }
+}

@@ -34,7 +34,10 @@ interface ClientGalleryViewProps {
   token: string;
 }
 
-export default function ClientGalleryView({ gallery, token }: ClientGalleryViewProps) {
+export default function ClientGalleryView({
+  gallery,
+  token
+}: ClientGalleryViewProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "slideshow">("grid");
 
@@ -50,12 +53,13 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
-      day: "numeric",
+      day: "numeric"
     });
   };
 
   const expiryDate = gallery.expiresAt ? new Date(gallery.expiresAt) : null;
-  const isExpiringSoon = expiryDate && expiryDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000; // 7 days
+  const isExpiringSoon =
+    expiryDate && expiryDate.getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000; // 7 days
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -65,22 +69,29 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
           <div className="py-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{gallery.title}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {gallery.title}
+                </h1>
                 <div className="mt-2 space-y-1 text-sm text-gray-600">
                   <p>
-                    <span className="font-medium">Client:</span> {gallery.session.client.name}
+                    <span className="font-medium">Client:</span>{" "}
+                    {gallery.session.client.name}
                   </p>
                   <p>
-                    <span className="font-medium">Session:</span> {gallery.session.title}
+                    <span className="font-medium">Session:</span>{" "}
+                    {gallery.session.title}
                   </p>
                   <p>
-                    <span className="font-medium">Date:</span> {formatDate(gallery.session.date)}
+                    <span className="font-medium">Date:</span>{" "}
+                    {formatDate(gallery.session.date)}
                   </p>
                 </div>
               </div>
               <div className="mt-4 sm:mt-0 flex items-center space-x-4">
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">{gallery.photos.length}</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {gallery.photos.length}
+                  </p>
                   <p className="text-sm text-gray-600">Photos</p>
                 </div>
                 <div className="flex bg-gray-100 rounded-lg p-1">
@@ -107,7 +118,7 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
                 </div>
               </div>
             </div>
-            
+
             {gallery.description && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <p className="text-blue-800">{gallery.description}</p>
@@ -120,7 +131,8 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
                   <div className="text-yellow-800">
                     <p className="font-medium">Gallery Expiring Soon</p>
                     <p className="text-sm">
-                      This gallery will expire on {formatDate(expiryDate.toISOString())}
+                      This gallery will expire on{" "}
+                      {formatDate(expiryDate.toISOString())}
                     </p>
                   </div>
                 </div>
@@ -156,7 +168,9 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
                     </p>
                     <div className="mt-1 flex items-center justify-between text-xs text-gray-500">
                       <span>
-                        {photo.width && photo.height && `${photo.width}×${photo.height}`}
+                        {photo.width &&
+                          photo.height &&
+                          `${photo.width}×${photo.height}`}
                       </span>
                       <span>{formatFileSize(photo.size)}</span>
                     </div>
@@ -179,14 +193,15 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
                   <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white px-3 py-2 rounded">
                     <p className="font-medium">{selectedPhoto.originalName}</p>
                     <p className="text-sm opacity-90">
-                      {selectedPhoto.width && selectedPhoto.height && 
+                      {selectedPhoto.width &&
+                        selectedPhoto.height &&
                         `${selectedPhoto.width}×${selectedPhoto.height} • `}
                       {formatFileSize(selectedPhoto.size)}
                     </p>
                   </div>
                 </div>
               )}
-              
+
               {/* Thumbnail strip */}
               <div className="p-4 bg-gray-50 border-t">
                 <div className="flex space-x-2 overflow-x-auto">
@@ -216,12 +231,16 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
         ) : (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📸</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No photos available</h3>
-            <p className="text-gray-600">This gallery does not contain any photos yet.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No photos available
+            </h3>
+            <p className="text-gray-600">
+              This gallery does not contain any photos yet.
+            </p>
           </div>
         )}
       </main>
-      
+
       {/* Photo Modal */}
       {selectedPhoto && viewMode === "grid" && (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
@@ -240,7 +259,8 @@ export default function ClientGalleryView({ gallery, token }: ClientGalleryViewP
             <div className="absolute bottom-4 left-4 bg-black bg-opacity-75 text-white px-3 py-2 rounded">
               <p className="font-medium">{selectedPhoto.originalName}</p>
               <p className="text-sm opacity-90">
-                {selectedPhoto.width && selectedPhoto.height && 
+                {selectedPhoto.width &&
+                  selectedPhoto.height &&
                   `${selectedPhoto.width}×${selectedPhoto.height} • `}
                 {formatFileSize(selectedPhoto.size)}
               </p>
