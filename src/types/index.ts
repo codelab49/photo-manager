@@ -1,0 +1,48 @@
+export interface Photo {
+  id: string;
+  filename: string;
+  originalName: string;
+  path: string;
+  previewPath: string | null;
+  thumbnailPath: string | null;
+  size: number;
+  width: number | null;
+  height: number | null;
+  uploadedAt: Date;
+}
+
+export interface PhotoUploadResult {
+  id: string;
+  filename: string;
+  originalName: string;
+  thumbnailPath: string | null;
+  size: number;
+  width: number | null;
+  height: number | null;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+}
+
+export interface PhotoSession {
+  id: string;
+  title: string;
+  description?: string | null;
+  sessionDate: Date;
+  location?: string | null;
+  client: Client;
+  photos: Photo[];
+  _count: {
+    photos: number;
+  };
+}
+
+export interface User {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+}

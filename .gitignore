@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Google Cloud Service Account Keys
+*.json
+cgame-437502-0dca3f906426.json
+
+# Cookies and test files
+cookies*.txt
+test-*.js
+test-*.mjs
+check-photos.js
+
+# Temporary files
+*.tmp
+*.temp

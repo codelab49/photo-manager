@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  password    String
+  role        UserRole @default(PHOTOGRAPHER)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  sessions    PhotoSession[]
+  photos      Photo[]
+  clients     Client[]
+  
+  @@map("users")
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  photographerId String
+  photographer   User           @relation(fields: [photographerId], references: [id])
+  sessions       PhotoSession[]
+  galleries      Gallery[]
+  
+  @@map("clients")
+}
+
+model PhotoSession {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  sessionDate DateTime
+  location    String?
+  status      SessionStatus @default(ACTIVE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Relations
+  photographerId String
+  photographer   User     @relation(fields: [photographerId], references: [id])
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id])
+  photos         Photo[]
+  galleries      Gallery[]
+  
+  @@map("photo_sessions")
+}
+
+model Photo {
+  id           String    @id @default(cuid())
+  filename     String
+  originalName String
+  path         String
+  previewPath  String?   // Watermarked version for client viewing
+  thumbnailPath String?
+  mimeType     String
+  size         Int
+  width        Int?
+  height       Int?
+  metadata     Json?
+  uploadedAt   DateTime  @default(now())
+  
+  // Relations
+  photographerId String
+  photographer   User         @relation(fields: [photographerId], references: [id])
+  sessionId      String
+  session        PhotoSession @relation(fields: [sessionId], references: [id])
+  galleries      GalleryPhoto[]
+  
+  @@map("photos")
+}
+
+model Gallery {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  shareToken  String        @unique
+  isActive    Boolean       @default(true)
+  expiresAt   DateTime?
+  watermark   Json?         // Watermark settings
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  sessionId String
+  session   PhotoSession  @relation(fields: [sessionId], references: [id])
+  clientId  String
+  client    Client        @relation(fields: [clientId], references: [id])
+  photos    GalleryPhoto[]
+  
+  @@map("galleries")
+}
+
+model GalleryPhoto {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  
+  // Relations
+  galleryId String
+  gallery   Gallery @relation(fields: [galleryId], references: [id])
+  photoId   String
+  photo     Photo   @relation(fields: [photoId], references: [id])
+  
+  @@unique([galleryId, photoId])
+  @@map("gallery_photos")
+}
+
+enum UserRole {
+  PHOTOGRAPHER
+  ADMIN
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
